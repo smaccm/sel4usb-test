@@ -31,6 +31,7 @@
 #include <sel4utils/irq_server.h>
 #include <sel4utils/vspace.h>
 #include <sel4utils/thread.h>
+#include <sel4utils/mapping.h>
 #include <dma/dma.h>
 
 #include <usb/usb.h>
@@ -42,6 +43,8 @@
 #define USB_HOST_IRQ  103
 #elif defined PLAT_IMX6
 #define USB_HOST_IRQ  72
+#elif defined PLAT_PC99
+#define USB_HOST_IRQ  23
 #endif
 
 #define DMA_VSTART  0x40000000
@@ -142,7 +145,7 @@ static int
 _dma_morecore(size_t min_size, int cached, struct dma_mem_descriptor* dma_desc)
 {
     static uint32_t _vaddr = DMA_VSTART;
-    struct seL4_ARM_Page_GetAddress getaddr_ret;
+    struct seL4_ARCH_Page_GetAddress getaddr_ret;
     seL4_CPtr frame;
     seL4_CPtr pd;
     vka_t* vka;
@@ -159,7 +162,7 @@ _dma_morecore(size_t min_size, int cached, struct dma_mem_descriptor* dma_desc)
     }
 
     /* Try to map the page */
-    err = seL4_ARM_Page_Map(frame, pd, _vaddr, seL4_AllRights, 0);
+    err = seL4_ARCH_Page_Map(frame, pd, _vaddr, seL4_AllRights, 0);
     if (err) {
         seL4_CPtr pt;
         /* Allocate a page table */
@@ -169,13 +172,13 @@ _dma_morecore(size_t min_size, int cached, struct dma_mem_descriptor* dma_desc)
             return -1;
         }
         /* Map the page table */
-        err = seL4_ARM_PageTable_Map(pt, pd, _vaddr, 0);
+        err = seL4_ARCH_PageTable_Map(pt, pd, _vaddr, 0);
         if (err) {
             printf("Failed to map page table\n");
             return -1;
         }
         /* Try to map the page again */
-        err = seL4_ARM_Page_Map(frame, pd, _vaddr, seL4_AllRights, 0);
+        err = seL4_ARCH_Page_Map(frame, pd, _vaddr, seL4_AllRights, 0);
         if (err) {
             printf("Failed to map page\n");
             return -1;
@@ -184,7 +187,7 @@ _dma_morecore(size_t min_size, int cached, struct dma_mem_descriptor* dma_desc)
     }
 
     /* Find the physical address of the page */
-    getaddr_ret = seL4_ARM_Page_GetAddress(frame);
+    getaddr_ret = seL4_ARCH_Page_GetAddress(frame);
     assert(!getaddr_ret.error);
     /* Setup dma memory description */
     dma_desc->vaddr = _vaddr;
@@ -236,8 +239,10 @@ vmm_init(void)
     platsupport_serial_setup_simple(NULL, simple, vka);
 
     /* Initialise MUX subsystem */
+#ifdef ARCH_ARM
     err = mux_sys_init(&_io_ops, &_io_ops.mux_sys);
     assert(!err);
+#endif
 
     /* Initialise DMA */
     err = dma_dmaman_init(&_dma_morecore, NULL, &_io_ops.dma_manager);
@@ -302,7 +307,7 @@ main(void)
     err = vmm_init();
     assert(!err);
 
-//    print_boot_info();
+    print_boot_info();
     usb = malloc(sizeof(usb_t));
 
     err = usb_init(USB_HOST_DEFAULT, &_io_ops, usb);
