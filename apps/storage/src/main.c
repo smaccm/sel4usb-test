@@ -25,6 +25,7 @@
 #include <platsupport/io.h>
 #include <sel4platsupport/platsupport.h>
 #include <sel4platsupport/io.h>
+#include <sel4platsupport/arch/io.h>
 
 #include <cpio/cpio.h>
 
@@ -233,6 +234,9 @@ vmm_init(void)
     /* Initialise device support */
     err = sel4platsupport_new_io_mapper(*simple, *vspace, *vka,
                                         &_io_ops.io_mapper);
+    assert(!err);
+
+    err = sel4platsupport_get_io_port_ops(&_io_ops.io_port_ops, simple);
     assert(!err);
 
     /* Setup debug port: printf() is only reliable after this */

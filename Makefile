@@ -12,7 +12,9 @@ lib-dirs:=libs
 
 # The main target we want to generate
 all: app-images
-	-cp images/storage-image-arm-${PLAT} images/capdl-loader-experimental-image-arm-${PLAT}
+	-cp images/storage-image-${ARCH}-${PLAT} images/capdl-loader-experimental-image-${ARCH}-${PLAT}
+	-cp images/kernel-ia32-pc99 /srv/tftp/
+	-cp images/storage-image-ia32-${PLAT} /srv/tftp/
 
 -include .config
 

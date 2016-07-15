@@ -22,7 +22,7 @@ OFILES   := archive.o
 LIBS = c sel4 sel4muslcsys sel4vka sel4allocman \
        platsupport sel4platsupport sel4vspace elf \
        sel4utils sel4simple utils  sel4simple-default cpio \
-       usbdrivers sel4dma sel4sync
+       usbdrivers sel4dma sel4sync pci
 
 #CFLAGS += -Werror
 
