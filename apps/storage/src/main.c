@@ -236,8 +236,10 @@ vmm_init(void)
                                         &_io_ops.io_mapper);
     assert(!err);
 
+#ifdef ARCH_X86
     err = sel4platsupport_get_io_port_ops(&_io_ops.io_port_ops, simple);
     assert(!err);
+#endif
 
     /* Setup debug port: printf() is only reliable after this */
     platsupport_serial_setup_simple(NULL, simple, vka);
