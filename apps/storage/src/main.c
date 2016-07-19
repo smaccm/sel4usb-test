@@ -40,14 +40,6 @@
 
 #include <sync/mutex.h>
 
-#ifdef PLAT_EXYNOS5
-#define USB_HOST_IRQ  103
-#elif defined PLAT_IMX6
-#define USB_HOST_IRQ  72
-#elif defined PLAT_PC99
-#define USB_HOST_IRQ  23
-#endif
-
 #define DMA_VSTART  0x40000000
 
 #ifndef DEBUG_BUILD
@@ -309,6 +301,7 @@ main(void)
     int err;
     struct irq_data *irq_data;
     sel4utils_thread_t thread;
+    const int *irq;
 
     err = vmm_init();
     assert(!err);
@@ -319,7 +312,8 @@ main(void)
     err = usb_init(USB_HOST_DEFAULT, &_io_ops, usb);
     assert(!err);
 
-    irq_data = irq_server_register_irq(_irq_server, USB_HOST_IRQ, usb_irq_handler, usb);
+    irq = usb_host_irqs(&usb->hdev, NULL);
+    irq_data = irq_server_register_irq(_irq_server, irq[0], usb_irq_handler, usb);
     assert(irq_data);
     
 
