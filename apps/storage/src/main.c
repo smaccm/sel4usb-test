@@ -132,7 +132,10 @@ print_boot_info(void)
     }
     printf("-------------------------------\n\n");
 }
-
+void debug_print_bootinfo(seL4_BootInfo *info)
+{
+	print_boot_info();
+}
 
 static int
 _dma_morecore(size_t min_size, int cached, struct dma_mem_descriptor* dma_desc)
