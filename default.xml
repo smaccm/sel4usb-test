@@ -54,9 +54,10 @@
     <linkfile src="libcpio" dest="libs/libcpio"/>
     <linkfile src="libelf" dest="libs/libelf"/>
     <linkfile src="libutils" dest="libs/libutils"/>
+    <linkfile src="libpci" dest="libs/libpci"/>
 </project>
 
-<project remote="seL4-projects" name="projects_libs.git" path="projects/projects_libs">
+<project remote="private" name="projects_libs.git" path="projects/projects_libs" revision="x86">
     <linkfile src="libusbdrivers" dest="libs/libusbdrivers"/>
 </project>
 
