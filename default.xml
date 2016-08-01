@@ -70,6 +70,8 @@
     <linkfile src="Kbuild" dest="Kbuild"/>
     <linkfile src="Kconfig" dest="Kconfig"/>
     <linkfile src="configs" dest="configs"/>
+    <linkfile src="GVR-BOT-README.md" dest="GVR-BOT-README.md"/>
+    <linkfile src="README.md" dest="README.md"/>
     <linkfile src="apps/storage" dest="apps/storage"/>
 </project>
 
