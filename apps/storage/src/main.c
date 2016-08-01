@@ -36,7 +36,7 @@
 #include <dma/dma.h>
 
 #include <usb/usb.h>
-#include <usb/drivers/storage.h>
+//#include <usb/drivers/storage.h>
 
 #include <sync/mutex.h>
 
@@ -283,14 +283,14 @@ usb_test(void)
     sel4utils_thread_t thread;
 
     while (1) {
-        usb_storage = usb_get_device(usb, 3);
+        usb_storage = usb_get_device(usb, 10);
 	if (usb_storage) {
             break;
 	}
     }
 
-    usb_lsusb(usb, 1);
     usb_storage_bind(usb_storage, &_mutex);
+    usb_lsusb(usb, 1);
 
     seL4_DebugHalt();
 }
@@ -309,7 +309,7 @@ main(void)
     print_boot_info();
     usb = malloc(sizeof(usb_t));
 
-    err = usb_init(USB_HOST_DEFAULT, &_io_ops, usb);
+    err = usb_init(USB_HOST2, &_io_ops, usb);
     assert(!err);
 
     irq = usb_host_irqs(&usb->hdev, NULL);
