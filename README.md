@@ -8,13 +8,15 @@ Building
 --------
 
 To build do
+```
     make clean
-    make gvrbot-storage-defconfig
+    make gvrbot_storage_defconfig
     make silentoldconfig
     make
+```
 
-Then boot images/kernel-ia32-pc99 and images/storage-image-ia32-pc99 with the
-multiboot boot loader of your choice
+Then boot `images/kernel-ia32-pc99` and `images/storage-image-ia32-pc99` with 
+the multiboot boot loader of your choice
 
 Running
 -------
@@ -29,6 +31,6 @@ Most of the devices, like USB thumb disk and USB SD card reader should work.
 However there are known devices which would fail to respond certain commands or
 have very long respond time.
 
-Note that the USB driver doesn't support unplug a device at the moment, unplug a
-device won't harm the application, but you won't be able to plug in any new
-devices again.
+Note that the USB driver doesn't support unplugging a device at the moment, 
+unplugging a device won't harm the application, but you won't be able to plug 
+in any new devices again.
