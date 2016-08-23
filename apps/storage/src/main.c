@@ -35,8 +35,8 @@
 #include <sel4utils/mapping.h>
 #include <dma/dma.h>
 
-#include <usb/usb.h>
-//#include <usb/drivers/storage.h>
+#include <usb/drivers/storage.h>
+#include <usb/drivers/cdc.h>
 
 #include <sync/mutex.h>
 
@@ -277,6 +277,32 @@ usb_irq_handler(struct irq_data *irq_data)
     usb_handle_irq(usb_priv);
     irq_data_ack_irq(irq_data);
 }
+
+static void
+usb_cdc_test(usb_dev_t udev)
+{
+	struct acm_line_coding coding;
+	coding.dwDTERate = 9600;
+	coding.bCharFormat = ACM_STOP_1BIT;;
+	coding.bParityType = ACM_PARITY_NONE;
+	coding.bDataBits = 8;
+
+	acm_set_line_coding(udev, &coding);
+
+	acm_set_ctrl_line_state(udev, ACM_CTRL_RTS | ACM_CTRL_DTR);
+	char *buf = calloc(1, 10);
+	memset(buf, 'U', 10);
+	usb_cdc_write(udev, buf, 10);
+	usb_cdc_read(udev, buf, 10);
+
+	for (int i = 0; i < 10; i++) {
+		printf("%X, ", buf[i]);
+	}
+	printf("\n");
+
+	free(buf);
+}
+
 static void
 usb_test(void)
 {
@@ -286,13 +312,15 @@ usb_test(void)
     sel4utils_thread_t thread;
 
     while (1) {
-        usb_storage = usb_get_device(usb, 10);
+        usb_storage = usb_get_device(usb, 3);
 	if (usb_storage) {
             break;
 	}
     }
 
-    usb_storage_bind(usb_storage, &_mutex);
+//    usb_storage_bind(usb_storage, &_mutex);
+    usb_cdc_bind(usb_storage);
+    usb_cdc_test(usb_storage);
     usb_lsusb(usb, 1);
 
     seL4_DebugHalt();
@@ -312,7 +340,7 @@ main(void)
     print_boot_info();
     usb = malloc(sizeof(usb_t));
 
-    err = usb_init(USB_HOST2, &_io_ops, usb);
+    err = usb_init(USB_HOST_DEFAULT, &_io_ops, usb);
     assert(!err);
 
     irq = usb_host_irqs(&usb->hdev, NULL);
