@@ -278,11 +278,24 @@ usb_irq_handler(struct irq_data *irq_data)
     irq_data_ack_irq(irq_data);
 }
 
+static inline void udelay(uint32_t us)
+{
+	volatile uint32_t i;
+	for (; us > 0; us--) {
+		for (i = 0; i < 1000; i++);
+	}
+}
+extern void set_flipper_effort(usb_dev_t udev, int8_t effort);
+extern void clear_fault(usb_dev_t udev, uint16_t fault);
+extern void set_status(usb_dev_t udev, uint8_t status);
+extern void set_flipper_postion(usb_dev_t udev, int angle, int velocity);
+extern uint16_t report_flipper_postion(usb_dev_t udev);
 static void
 usb_cdc_test(usb_dev_t udev)
 {
+	uint16_t angle = 0;
 	struct acm_line_coding coding;
-	coding.dwDTERate = 9600;
+	coding.dwDTERate = 115200;
 	coding.bCharFormat = ACM_STOP_1BIT;;
 	coding.bParityType = ACM_PARITY_NONE;
 	coding.bDataBits = 8;
@@ -290,17 +303,21 @@ usb_cdc_test(usb_dev_t udev)
 	acm_set_line_coding(udev, &coding);
 
 	acm_set_ctrl_line_state(udev, ACM_CTRL_RTS | ACM_CTRL_DTR);
-	char *buf = calloc(1, 10);
-	memset(buf, 'U', 10);
-	usb_cdc_write(udev, buf, 10);
-	usb_cdc_read(udev, buf, 10);
 
-	for (int i = 0; i < 10; i++) {
-		printf("%X, ", buf[i]);
-	}
-	printf("\n");
+	clear_fault(udev, 0xFFFF);
+	udelay(1000);
 
-	free(buf);
+	set_status(udev, 4);
+	udelay(1000);
+
+	angle = report_flipper_postion(udev);
+	printf("Flipper angle: %u\n", angle);
+
+	set_flipper_effort(udev, 20);
+	udelay(4000);
+
+	angle = report_flipper_postion(udev);
+	printf("Flipper angle: %u\n", angle);
 }
 
 static void
@@ -312,16 +329,24 @@ usb_test(void)
     sel4utils_thread_t thread;
 
     while (1) {
-        usb_storage = usb_get_device(usb, 3);
+        usb_storage = usb_get_device(usb, 9);
 	if (usb_storage) {
             break;
 	}
     }
 
+    for (int i = 1; i <= 9; i++) {
+	    usb_storage = usb_get_device(usb, i);
+	    if (usb_storage->prod_id == 0x0008) {
+		    printf("Found Flipper: %u\n", i);
+		    break;
+	    }
+    }
+
 //    usb_storage_bind(usb_storage, &_mutex);
     usb_cdc_bind(usb_storage);
-    usb_cdc_test(usb_storage);
     usb_lsusb(usb, 1);
+    usb_cdc_test(usb_storage);
 
     seL4_DebugHalt();
 }
