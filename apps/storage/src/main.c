@@ -37,6 +37,7 @@
 
 #include <usb/drivers/storage.h>
 #include <usb/drivers/cdc.h>
+#include <usb/drivers/pl2303.h>
 
 #include <sync/mutex.h>
 
@@ -255,6 +256,8 @@ usb_cdc_test(usb_dev_t udev)
 	coding.bParityType = ACM_PARITY_NONE;
 	coding.bDataBits = 8;
 
+	usb_cdc_bind(udev);
+
 	acm_set_line_coding(udev, &coding);
 
 	acm_set_ctrl_line_state(udev, ACM_CTRL_RTS | ACM_CTRL_DTR);
@@ -276,6 +279,12 @@ usb_cdc_test(usb_dev_t udev)
 }
 
 static void
+usb_serial_test(usb_dev_t udev)
+{
+	usb_pl2303_bind(udev);
+}
+
+static void
 usb_test(void)
 {
     int err;
@@ -284,24 +293,24 @@ usb_test(void)
     sel4utils_thread_t thread;
 
     while (1) {
-        usb_storage = usb_get_device(usb, 9);
+        usb_storage = usb_get_device(usb, 3);
 	if (usb_storage) {
             break;
 	}
     }
 
-    for (int i = 1; i <= 9; i++) {
-	    usb_storage = usb_get_device(usb, i);
-	    if (usb_storage->prod_id == 0x0008) {
-		    printf("Found Flipper: %u\n", i);
-		    break;
-	    }
-    }
+//    for (int i = 1; i <= 9; i++) {
+//	    usb_storage = usb_get_device(usb, i);
+//	    if (usb_storage->prod_id == 0x0008) {
+//		    printf("Found Flipper: %u\n", i);
+//		    break;
+//	    }
+//    }
 
 //    usb_storage_bind(usb_storage, &_mutex);
-    usb_cdc_bind(usb_storage);
     usb_lsusb(usb, 1);
-    usb_cdc_test(usb_storage);
+//    usb_cdc_test(usb_storage);
+    usb_serial_test(usb_storage);
 
     seL4_DebugHalt();
 }
