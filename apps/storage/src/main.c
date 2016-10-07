@@ -88,53 +88,8 @@ print_cpio_info(void)
     printf("\n");
 }
 
-static void
-print_boot_info(void)
-{
-    seL4_BootInfo* bi;
-    seL4_DeviceRegion* dr;
-    int n_ut;
-    int n_dr;
-    int i;
-
-    bi = seL4_GetBootInfo();
-
-    /* Untyped */
-    n_ut = bi->untyped.end - bi->untyped.start;
-    assert(bi);
-    printf("\n");
-    printf("-------------------------------\n");
-    printf("|  Boot info untyped regions  |\n");
-    printf("-------------------------------\n");
-    for (i = 0; i < n_ut; i++) {
-        uint32_t start, end;
-        int bits;
-        start = bi->untypedPaddrList[i];
-        bits = bi->untypedSizeBitsList[i];
-        end = start + (1U << bits);
-        printf("| 0x%08x->0x%08x (%2d) |\n", start, end, bits);
-    }
-    printf("-------------------------------\n\n");
-
-    /* Device caps */
-    printf("-------------------------------\n");
-    printf("|  Boot info device regions   |\n");
-    printf("-------------------------------\n");
-    n_dr = bi->numDeviceRegions;
-    dr = bi->deviceRegions;
-    for (i = 0; i < n_dr; i++) {
-        uint32_t start, end;
-        int bits;
-        start = dr[i].basePaddr;
-        bits = dr[i].frameSizeBits;;
-        end = start + ((1U << bits) * (dr[i].frames.end - dr[i].frames.start));
-        printf("| 0x%08x->0x%08x (%2d) |\n", start, end, bits);
-    }
-    printf("-------------------------------\n\n");
-}
 void debug_print_bootinfo(seL4_BootInfo *info)
 {
-	print_boot_info();
 }
 
 static int
@@ -227,7 +182,7 @@ vmm_init(void)
     assert(!err);
 
     /* Initialise device support */
-    err = sel4platsupport_new_io_mapper(*simple, *vspace, *vka,
+    err = sel4platsupport_new_io_mapper(*vspace, *vka,
                                         &_io_ops.io_mapper);
     assert(!err);
 
@@ -362,7 +317,6 @@ main(void)
     err = vmm_init();
     assert(!err);
 
-    print_boot_info();
     usb = malloc(sizeof(usb_t));
 
     err = usb_init(USB_HOST_DEFAULT, &_io_ops, usb);
