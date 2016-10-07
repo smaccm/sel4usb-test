@@ -61,6 +61,7 @@ irq_server_t _irq_server;
 sync_mutex_t _mutex;
 
 struct ps_io_ops _io_ops;
+mutex_ops_t _mutex_ops;
 
 extern char _cpio_archive[];
 
@@ -224,12 +225,46 @@ vmm_init(void)
     return 0;
 }
 
+static void *mutex_init(void)
+{
+    int err;
+    sync_mutex_t *mutex;
+    vka_object_t mutex_aep_obj;
+
+    err = vka_alloc_notification(&_vka, &mutex_aep_obj);
+    assert(!err);
+
+    mutex = malloc(sizeof(sync_mutex_t));
+    sync_mutex_init(mutex, mutex_aep_obj.cptr);
+
+    return (void*)mutex;
+}
+
+static int mutex_lock(void *mutex)
+{
+    assert(mutex);
+    return sync_mutex_lock((sync_mutex_t*)mutex);
+}
+
+static int mutex_unlock(void *mutex)
+{
+    assert(mutex);
+    return sync_mutex_unlock((sync_mutex_t*)mutex);
+}
+
+static int mutex_destroy(void *mutex)
+{
+    assert(mutex);
+    return sync_mutex_destroy((sync_mutex_t*)mutex);
+//    vka_free_object(&_vka, mutex);
+}
+
 usb_t *usb = NULL;
 
 static void
 usb_irq_handler(struct irq_data *irq_data)
 {
-    usb_t *usb_priv = (usb_host_t*)irq_data->token;
+    usb_t *usb_priv = (usb_t*)irq_data->token;
     usb_handle_irq(usb_priv);
     irq_data_ack_irq(irq_data);
 }
@@ -261,7 +296,14 @@ usb_cdc_test(usb_dev_t udev)
 	acm_set_line_coding(udev, &coding);
 
 	acm_set_ctrl_line_state(udev, ACM_CTRL_RTS | ACM_CTRL_DTR);
+	udelay(1000);
 
+	char *str = "123456789012324567901234567890123465789012345678901324567890";
+	for (int i = 0; i < 50; i++) {
+		usb_cdc_write(udev, str, i + 1);
+//		udelay(1);
+	}
+	return;
 	clear_fault(udev, 0xFFFF);
 	udelay(1000);
 
@@ -281,16 +323,19 @@ usb_cdc_test(usb_dev_t udev)
 static void
 usb_serial_test(usb_dev_t udev)
 {
+	char *str = "This is a USB to serial test.\n";
+
 	usb_pl2303_bind(udev);
+
+	usb_pl2303_configure(udev, 115200, 8, PARITY_NONE, 0);
+
+	usb_pl2303_write(udev, str, strlen(str));
 }
 
 static void
 usb_test(void)
 {
-    int err;
     usb_dev_t usb_storage = NULL;
-    seL4_Word badge;
-    sel4utils_thread_t thread;
 
     while (1) {
         usb_storage = usb_get_device(usb, 3);
@@ -307,10 +352,10 @@ usb_test(void)
 //	    }
 //    }
 
-//    usb_storage_bind(usb_storage, &_mutex);
+//    usb_storage_bind(usb_storage, NULL);
     usb_lsusb(usb, 1);
-//    usb_cdc_test(usb_storage);
-    usb_serial_test(usb_storage);
+    usb_cdc_test(usb_storage);
+//    usb_serial_test(usb_storage);
 
     seL4_DebugHalt();
 }
@@ -326,9 +371,14 @@ main(void)
     err = vmm_init();
     assert(!err);
 
+    _mutex_ops.mutex_init = mutex_init;
+    _mutex_ops.mutex_lock = mutex_lock;
+    _mutex_ops.mutex_unlock = mutex_unlock;
+    _mutex_ops.mutex_destroy = mutex_destroy;
+
     usb = malloc(sizeof(usb_t));
 
-    err = usb_init(USB_HOST_DEFAULT, &_io_ops, usb);
+    err = usb_init(USB_HOST_DEFAULT, &_io_ops, &_mutex_ops, usb);
     assert(!err);
 
     irq = usb_host_irqs(&usb->hdev, NULL);
