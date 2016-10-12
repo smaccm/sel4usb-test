@@ -22,9 +22,9 @@
 
 <remote name="seL4-projects" fetch="../seL4proj"/>
 
-<default revision="master" remote="seL4"/>
+<default revision="master" remote="private"/>
 
-<project name="seL4.git" path="kernel">
+<project name="seL4.git" path="kernel" revision="gtt_deliverable">
     <linkfile src="libsel4" dest="libs/libsel4"/>
 </project>
 
@@ -36,7 +36,7 @@
 
 <project name="musllibc.git" path="libs/libmuslc" revision="sel4"/>
 
-<project name="seL4_libs.git" path="projects/seL4_libs">
+<project name="seL4_libs.git" path="projects/seL4_libs" revision="gtt_deliverable">
     <linkfile src="libsel4muslcsys" dest="libs/libsel4muslcsys"/>
     <linkfile src="libsel4platsupport" dest="libs/libsel4platsupport"/>
     <linkfile src="libsel4allocman" dest="libs/libsel4allocman"/>
@@ -47,6 +47,7 @@
     <linkfile src="libsel4simple-default" dest="libs/libsel4simple-default"/>
     <linkfile src="libsel4debug" dest="libs/libsel4debug"/>
     <linkfile src="libsel4sync" dest="libs/libsel4sync"/>
+    <linkfile src="libsel4bench" dest="libs/libsel4bench"/>
 </project>
 
 <project name="util_libs.git" path="projects/util_libs">

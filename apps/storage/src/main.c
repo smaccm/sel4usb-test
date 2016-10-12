@@ -182,7 +182,7 @@ vmm_init(void)
     assert(!err);
 
     /* Initialise device support */
-    err = sel4platsupport_new_io_mapper(*vspace, *vka,
+    err = sel4platsupport_new_io_mapper(*simple, *vspace, *vka,
                                         &_io_ops.io_mapper);
     assert(!err);
 
@@ -328,7 +328,7 @@ main(void)
     
 
     /* Create test thread */
-    err = sel4utils_configure_thread(&_vka, &_vspace, &_vspace, seL4_CapNull, 253,
+    err = sel4utils_configure_thread(&_simple, &_vka, &_vspace, &_vspace, seL4_CapNull, 253,
 		                     simple_get_cnode(&_simple), seL4_NilData, &thread);
     assert(!err);
 
