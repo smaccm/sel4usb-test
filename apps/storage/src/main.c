@@ -296,19 +296,10 @@ usb_cdc_test(usb_dev_t udev)
 	acm_set_line_coding(udev, &coding);
 
 	acm_set_ctrl_line_state(udev, ACM_CTRL_RTS | ACM_CTRL_DTR);
-	udelay(1000);
 
-	char *str = "123456789012324567901234567890123465789012345678901324567890";
-	for (int i = 0; i < 50; i++) {
-		usb_cdc_write(udev, str, i + 1);
-//		udelay(1);
-	}
-	return;
 	clear_fault(udev, 0xFFFF);
-	udelay(1000);
 
 	set_status(udev, 4);
-	udelay(1000);
 
 	angle = report_flipper_postion(udev);
 	printf("Flipper angle: %u\n", angle);
@@ -338,19 +329,19 @@ usb_test(void)
     usb_dev_t usb_storage = NULL;
 
     while (1) {
-        usb_storage = usb_get_device(usb, 3);
+        usb_storage = usb_get_device(usb, 9);
 	if (usb_storage) {
             break;
 	}
     }
 
-//    for (int i = 1; i <= 9; i++) {
-//	    usb_storage = usb_get_device(usb, i);
-//	    if (usb_storage->prod_id == 0x0008) {
-//		    printf("Found Flipper: %u\n", i);
-//		    break;
-//	    }
-//    }
+    for (int i = 1; i <= 9; i++) {
+	    usb_storage = usb_get_device(usb, i);
+	    if (usb_storage->prod_id == 0x0008) {
+		    printf("Found Flipper: %u\n", i);
+		    break;
+	    }
+    }
 
 //    usb_storage_bind(usb_storage, NULL);
     usb_lsusb(usb, 1);
